@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fox Notes — yerel bilgi kasan</title>
+  <meta name="description" content="Fox Notes: markdown notlarını [[wiki-link]]'lerle birbirine bağlayan, yerel, hesapsız bilgi kasası. Notion/Obsidian alternatifi." />
+  <link rel="icon" type="image/png" href="icon.png" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 32 32" width="30" height="30" aria-hidden="true">
+        <rect x="2" y="2" width="28" height="28" rx="7" fill="#e3a857"/>
+        <path d="M16 7l2.6 5.4 5.9.7-4.4 4 1.2 5.8L16 21l-5.3 2.9 1.2-5.8-4.4-4 5.9-.7L16 7z" fill="#14100e"/>
+      </svg>
+      <div class="brand-text">
+        <strong>FOX NOTES</strong>
+        <span>yerel bilgi kasan</span>
+      </div>
+    </div>
+    <label class="search">
+      <span class="search-icon" aria-hidden="true">⌕</span>
+      <input id="searchInput" type="text" placeholder="Notlarda ara…  ( / )" autocomplete="off" spellcheck="false" aria-label="Notlarda ara" />
+    </label>
+    <div class="top-actions">
+      <button class="btn btn-primary" id="newNoteBtn" type="button">+ Yeni Not</button>
+      <button class="btn btn-ghost" id="graphBtn" type="button" title="Bağlantı grafı">Graf</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="sidebar" aria-label="Kasa gezgini">
+      <nav class="side-nav">
+        <button class="side-item is-active" id="navAll" type="button">
+          <span class="side-label">Tüm Notlar</span>
+          <span class="side-count" id="countAll">0</span>
+        </button>
+      </nav>
+      <div class="side-section">
+        <h2 class="side-heading">ETİKETLER</h2>
+        <div class="tag-list" id="tagList"></div>
+      </div>
+      <footer class="side-foot">
+        <p class="vault-path" id="vaultPath">~/FoxNotes</p>
+        <p class="vault-meta"><span id="noteCount">0</span> not · yalnızca bu cihazda · yedeğin dosyalarda</p>
+      </footer>
+    </aside>
+
+    <section class="notes-col" aria-label="Not listesi">
+      <div class="notes-head">
+        <span class="notes-title" id="notesTitle">Tüm Notlar</span>
+        <select id="sortSelect" class="sort-select" aria-label="Sırala">
+          <option value="name">Ada göre</option>
+          <option value="mtime">Son düzenlenen</option>
+        </select>
+      </div>
+      <div class="note-list" id="noteList" role="listbox" aria-label="Notlar"></div>
+    </section>
+
+    <section class="editor-col" aria-label="Düzenleyici">
+      <div class="editor-empty" id="editorEmpty">
+        <svg viewBox="0 0 48 48" width="54" height="54" aria-hidden="true">
+          <rect x="6" y="4" width="36" height="40" rx="4" fill="none" stroke="#e3a857" stroke-width="2.4" opacity="0.55"/>
+          <line x1="13" y1="15" x2="35" y2="15" stroke="#e3a857" stroke-width="2.4" opacity="0.55"/>
+          <line x1="13" y1="23" x2="35" y2="23" stroke="#e3a857" stroke-width="2.4" opacity="0.38"/>
+          <line x1="13" y1="31" x2="27" y2="31" stroke="#e3a857" stroke-width="2.4" opacity="0.3"/>
+        </svg>
+        <h1>Bir not seç ya da oluştur</h1>
+        <p>Notlar <code>~/FoxNotes</code> klasörüne düz markdown olarak yazılır.<br/><code>[[Başka Nota Bağlan]]</code> ile bağlantı kur, <code>#etiket</code> kullan.</p>
+      </div>
+
+      <div class="editor-split" id="editorSplit" hidden>
+        <div class="editor-pane">
+          <textarea id="editor" spellcheck="false" autocomplete="off" aria-label="Not içeriği (markdown)"></textarea>
+        </div>
+        <div class="preview-pane">
+          <div class="preview-scroll" id="preview" aria-label="Önizleme"></div>
+          <footer class="backlinks" id="backlinks" hidden>
+            <h2>BU NOTA BAĞLANANLAR</h2>
+            <ul id="backlinkList"></ul>
+          </footer>
+        </div>
+      </div>
+
+      <footer class="statusbar">
+        <span id="saveStatus">Kaydedildi</span>
+        <span class="status-sep">·</span>
+        <span id="currentPath">—</span>
+        <span class="status-spacer"></span>
+        <button id="deleteNoteBtn" class="link-danger" type="button" hidden>Bu notu sil</button>
+      </footer>
+    </section>
+  </main>
+
+  <div class="graph-overlay" id="graphOverlay" hidden role="dialog" aria-label="Bağlantı grafı">
+    <canvas id="graphCanvas"></canvas>
+    <div class="graph-hint">Bağlantılar <code>[[...]]</code> içinden türetilir · bir düğüme tıklayarak notu aç · <kbd>Esc</kbd> kapat</div>
+    <button class="icon-btn graph-close" id="graphClose" type="button" aria-label="Kapat">✕</button>
+  </div>
+
+  <div class="modal-overlay" id="newNoteModal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="newNoteTitle">
+      <div class="modal-head">
+        <h2 id="newNoteTitle">Yeni not</h2>
+        <button class="icon-btn" id="newNoteClose" type="button" aria-label="Kapat">✕</button>
+      </div>
+      <label class="field"><span>Dosya adı</span>
+        <input id="newNoteName" type="text" placeholder="ör. Proje fikirleri" autocomplete="off" spellcheck="false" />
+      </label>
+      <p class="modal-hint">Klasör altında oluşturulur: <code id="newNoteDir">/</code> · boşsa kök dizine yazılır. "/" ile alt klasör girebilirsin (ör. <code>projeler/fikir</code>).</p>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" id="newNoteCancel" type="button">Vazgeç</button>
+        <button class="btn btn-primary" id="newNoteCreate" type="button">Oluştur</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

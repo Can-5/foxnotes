@@ -1,0 +1,21 @@
+[package]
+name = "foxnotes"
+version = "1.0.0"
+description = "Fox Notes — yerel markdown bilgi kasası (Notion/Obsidian alternatifi)"
+authors = ["Can <310246690+Can-5@users.noreply.github.com>"]
+edition = "2021"
+license = "MIT"
+rust-version = "1.77.2"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+dirs = "6"
+serde = { version = "1", features = ["derive"] }
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true
